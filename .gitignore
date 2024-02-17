@@ -1,0 +1,11 @@
+**/.pytest_cache/
+**/.idea/
+**/.mypy_cache/
+.DS_Store
+.obsidian*
+**/env/
+**/bert*
+**/longformer*
+**/__pycache__/
+**/.ipynb_checkpoints
+**/python*/
