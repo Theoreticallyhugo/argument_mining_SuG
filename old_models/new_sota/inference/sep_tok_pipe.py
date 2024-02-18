@@ -28,7 +28,9 @@ pipe = get_pipe(model_name, True)
 
 # =========================================
 # get the dataset and ner_tags
-ds = datasets.load_dataset("fancy_dataset", "simple", trust_remote_code=True)
+ds = datasets.load_dataset(
+    "Theoreticallyhugo/essays_SuG", "simple", trust_remote_code=True
+)
 # -----------------------------------------
 
 print("running inference")

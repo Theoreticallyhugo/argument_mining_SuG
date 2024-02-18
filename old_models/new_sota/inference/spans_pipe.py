@@ -1,4 +1,3 @@
-from threading import current_thread
 from transformers import set_seed
 from pipe_base import get_pipe
 from tqdm import tqdm
@@ -28,7 +27,9 @@ pipe = get_pipe(model_name, True)
 
 # =========================================
 # get the dataset and ner_tags
-ds = datasets.load_dataset("fancy_dataset", "spans", trust_remote_code=True)
+ds = datasets.load_dataset(
+    "Theoreticallyhugo/essays_SuG", "spans", trust_remote_code=True
+)
 # -----------------------------------------
 
 print("running inference")

@@ -29,7 +29,7 @@ pipe = get_pipe(model_name, True)
 # =========================================
 # get the dataset and ner_tags
 ds = datasets.load_dataset(
-    "fancy_dataset", "full_labels", trust_remote_code=True
+    "Theoreticallyhugo/essays_SuG", "full_labels", trust_remote_code=True
 )
 # -----------------------------------------
 
