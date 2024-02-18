@@ -1,5 +1,5 @@
 # ArgComp Project 
-The argument_mining_SuG project implements models for the identification of argument components (claims and premises) in raw texts following the work of Stab and Gurevych.
+The argument_mining_SuG project implements models for the identification of argument components (claims and premises) in raw texts following the work of Stab and Gurevych, surpassing their scores.
 
 # Models
 - full_labels
