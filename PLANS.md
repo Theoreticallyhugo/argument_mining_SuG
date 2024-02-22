@@ -6,7 +6,15 @@
 
 - test with randomised dataset 
 
+- test with SuG split
+
 - test with multiple seeds
+
+- best epoch
+
+- implement rene preprocessing step for training
+
+- full pipeline with good cli (read from file of kind (?) -> ask stede for specs)
 
 ## approaches:
 
@@ -29,3 +37,7 @@
   - majority voting with three experts for each class
   
   - majority voting for one normal model plus a couple of experts
+
+## TU DU 
+- use SuG split for comparability
+- average over multiple seeds
