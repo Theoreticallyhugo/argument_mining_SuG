@@ -16,6 +16,8 @@
 
 - full pipeline with good cli (read from file of kind (?) -> ask stede for specs)
 
+- optimised for uni gpu and mby cpu?
+
 ## approaches:
 
 - majority voting
@@ -37,7 +39,3 @@
   - majority voting with three experts for each class
   
   - majority voting for one normal model plus a couple of experts
-
-## TU DU 
-- use SuG split for comparability
-- average over multiple seeds
