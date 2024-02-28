@@ -2,10 +2,16 @@ import json
 from pathlib import Path
 
 
-def save_meta(folder: Path, seed: int, epochs: int, data: dict):
+def save_meta(
+    folder: Path,
+    seed: int,
+    epochs: int,
+    data: dict,
+    cross_validation_index: int,
+):
     folder = folder / "meta_data"
     folder.mkdir(parents=True, exist_ok=True)
-    file = f"meta_s{seed}_e{epochs}.json"
+    file = f"meta_s{seed}_e{epochs}_cvi{cross_validation_index}.json"
     with open(folder / file, "w") as w:
         json.dump(data, w)
 

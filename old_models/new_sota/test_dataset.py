@@ -24,6 +24,16 @@ ds.append(
         trust_remote_code=True,
     )
 )
+tests_ds = datasets.load_dataset(
+    "essays_SuG",
+    "spans",
+    split=[f"train[{k}%:{k+20}%]" for k in range(0, 100, 20)],
+)
+trains_ds = datasets.load_dataset(
+    "essays_SuG",
+    "spans",
+    split=[f"train[:{k}%]+train[{k+20}%:]" for k in range(0, 100, 20)],
+)
 print("done")
 for s in ds:
     print("")
@@ -32,11 +42,11 @@ for s in ds:
 
 
 # highlight spans in green
-for i in range(len(ds[1]["test"]["text"])):
+for i in range(len(ds[1]["train"]["text"])):
     print(f">>> text {i}")
-    text = ds[1]["test"]["text"][i]
-    cls_tok = ds[1]["test"]["span_begins"][i]
-    sep_tok = ds[1]["test"]["span_ends"][i]
+    text = ds[1]["train"]["text"][i]
+    cls_tok = ds[1]["train"]["span_begins"][i]
+    sep_tok = ds[1]["train"]["span_ends"][i]
     for letter in range(len(text)):
         if letter in cls_tok:
             # if a span starts here, set fore to green

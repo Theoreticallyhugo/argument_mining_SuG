@@ -28,7 +28,9 @@ def loud_print(*args, **kwargs):
     print(*args, **kwargs)
 
 
-def train(model, seed, epochs, push=True):
+def train(
+    model, seed, epochs, train_ds, test_ds, cross_validation_index, push=True
+):
     """
     args:
         model str: name of model to train (determines repo)
@@ -67,14 +69,16 @@ def train(model, seed, epochs, push=True):
     # _________________________________________
 
     # =========================================
-    raw_datasets = datasets.load_dataset(
-        "Theoreticallyhugo/essays_SuG", model, trust_remote_code=True
-    )
+
+    # raw_datasets = datasets.load_dataset(
+    #     "Theoreticallyhugo/essays_SuG", model, trust_remote_code=True
+    # )
+
     # get the dataset and ner_tags
     loud_print("using dataset:")
-    loud_print(raw_datasets)
+    loud_print(train_ds)
 
-    label_names = raw_datasets["train"].features["ner_tags"].feature
+    label_names = train_ds.features["ner_tags"].feature
     loud_print("with labels:")
     loud_print(label_names)
 
@@ -139,11 +143,22 @@ def train(model, seed, epochs, push=True):
 
     # =========================================
     # tokenize the dataset_dict. so we still got the sub datasets for train and test
-    tokenized_datasets = raw_datasets.map(
+    # tokenized_datasets = raw_datasets.map(
+    #     tokenize_and_align_labels,
+    #     batched=True,
+    #     remove_columns=raw_datasets["train"].column_names,
+    # )
+    tokenized_train_ds = train_ds.map(
         tokenize_and_align_labels,
         batched=True,
-        remove_columns=raw_datasets["train"].column_names,
+        remove_columns=train_ds.column_names,
     )
+    tokenized_test_ds = test_ds.map(
+        tokenize_and_align_labels,
+        batched=True,
+        remove_columns=test_ds.column_names,
+    )
+
     # _________________________________________
 
     # =========================================
@@ -164,7 +179,15 @@ def train(model, seed, epochs, push=True):
 
         # for key in ['input_ids', 'attention_mask', 'labels']:
 
-    tokenized_datasets = tokenized_datasets.map(
+    # tokenized_datasets = tokenized_datasets.map(
+    #     pad_dataset,
+    #     batched=True,
+    # )
+    tokenized_train_ds = tokenized_train_ds.map(
+        pad_dataset,
+        batched=True,
+    )
+    tokenized_test_ds = tokenized_test_ds.map(
         pad_dataset,
         batched=True,
     )
@@ -209,7 +232,9 @@ def train(model, seed, epochs, push=True):
         all_metrics = metric.compute(
             predictions=true_predictions, references=true_labels
         )
-        save_meta(Path(output_dir), seed, epochs, all_metrics)
+        save_meta(
+            Path(output_dir), seed, epochs, all_metrics, cross_validation_index
+        )
         return all_metrics
 
     # _________________________________________
@@ -242,8 +267,8 @@ def train(model, seed, epochs, push=True):
     trainer = Trainer(
         model=model,
         args=args,
-        train_dataset=tokenized_datasets["train"],
-        eval_dataset=tokenized_datasets["test"],
+        train_dataset=tokenized_train_ds,
+        eval_dataset=tokenized_test_ds,
         data_collator=data_collator,
         compute_metrics=compute_metrics,
         tokenizer=tokenizer,
@@ -318,4 +343,35 @@ if __name__ == "__main__":
         "sep_tok",
         "sep_tok_full_labels",
     ]
-    train(args.model, args.seed, args.epochs, args.push)
+
+    # TODO:
+    #   10-fold cross-validation (see also next section on rounding behavior):
+    #   The validation datasets are each going to be 10%:
+    #   [0%:10%], [10%:20%], ..., [90%:100%].
+    #   And the training datasets are each going to be the complementary 90%:
+    #   [10%:100%] (for a corresponding validation set of [0%:10%]),
+    #   [0%:10%] + [20%:100%] (for a validation set of [10%:20%]), ...,
+    #   [0%:90%] (for a validation set of [90%:100%]).
+    tests_ds = datasets.load_dataset(
+        "essays_SuG",
+        args.model,
+        split=[f"train[{k}%:{k+20}%]" for k in range(0, 100, 20)],
+    )
+    trains_ds = datasets.load_dataset(
+        "essays_SuG",
+        args.model,
+        split=[f"train[:{k}%]+train[{k+20}%:]" for k in range(0, 100, 20)],
+    )
+
+    for train_ds, test_ds, index in zip(
+        trains_ds, tests_ds, range(len(tests_ds))
+    ):
+        train(
+            args.model,
+            args.seed,
+            args.epochs,
+            train_ds,
+            test_ds,
+            index,
+            args.push,
+        )
