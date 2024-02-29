@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 from tqdm import tqdm
-from typing import Dict, List
 
 
 def save_meta(
@@ -169,16 +168,6 @@ def save_cross_validation():
         with open(out_file, "w") as w:
             json.dump(model, w, sort_keys=True, indent=4)
 
-
-# FIXME: fix before using
-# def collect_meta(output_dir: Path, seed: int):
-#     meta_dir = output_dir / "meta_data"
-#     for i, c_point in enumerate(output_dir.glob("checkpoint*")):
-#         print(c_point)
-#         i_file = c_point / "trainer_state.json"
-#         # FIXME: the way im retrieving the epoch here is very very unsafe
-#         o_file = Path.joinpath(meta_dir, f"meta_full_s{seed}_e{i}.json")
-#         o_file.write_text(i_file.read_text())
 
 if __name__ == "__main__":
     save_cross_validation()
