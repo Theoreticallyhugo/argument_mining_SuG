@@ -77,15 +77,29 @@
   \begin{abstract}
   some abstract stuff goes here \href{https://aclanthology.org/J17-3005/}{Stab und Gurevych}
   \end{abstract}
+  \section{indtroduction\dotfill}
+  \subsection{Previous Work: Stab and Gurevych 2017}
+  In 2017, Stab and Gurevych revisited their own work on argumentation mining from 2014. Dissatisfied with the existing corpora at the time, they decided to make their own, which they extended in 2017. On that corpus of persuasive essays, they annotated argument components and their argumentation structures. on these annotations, they trained models to built and tested a pipeline. 
+  ``However, our identification model yields good accuracy and an $\alpha_U$ of 0.958 for identifying argument components. Therefore, it is unlikely that identification errors will significantly influence the outcome of the downstream models when applied to persuasive essays.'' meaning that they didnt evaluate the entire pipeline, as they expect to get the same results as the models, running on gold data. This is a questionable practice, expecially considering that they're focussing on the accuracy, and not f1 here. \textcolor{red}{cant find the accuracy referenced here}
+  ``However, as demonstrated by Levy et al. (2014) and Goudas et al.
+(2014), the identification of argument components is more complex in other text genres
+than it is in persuasive essays. Another potential issue of the pipeline architecture is that
+wrongly classified major claims will decrease the accuracy of the model because they
+are not integrated in the joint modeling approach. For this reason, it is worthwhile to
+experiment in future work with structured machine learning methods that incorporate
+several tasks in one model (Moens 2013).'' I have trained such model, full\_labels, which sadly doesnt reach the f1 of the SuG ILP model yet.
+  \subsection{Goal of my work}
+  For this paper I have attempted to surpass the models for argument component identification and classification, as shown in Figure~\ref{fig:model_tree}. In general, the identification reagards the question of where an argument component, like MajorClaim, will be located, without knowing what type it will be. Then, the classification task is the labeling of what kind of argument component we are dealing with. Stab and Gurevych trained models for each task, and my goal was to surpass them.  \textcolor{red}{ELABORATE AND REFERENCE FIGURE} 
+  \begin{figure}[!h]
+    \centering
+    \includegraphics[width=1\linewidth]{../s-g_model_tree.png}
+    \caption{Architecture of the argumentation structure parser.}
+    \label{fig:model_tree}
+  \end{figure}
   \section{trainingsdaten\dotfill}
-  402 von Stab und Gurevych annotierte Schüleressays bilden die Grundlage für die Trainingsdaten dieses Projekts. Für jeden Essay enthält der Datensatz die Information, wo sich die Kernbehauptung des Textes - der MajorClaim, sonstige Behauptungen zum Stützen der zentralen Aussage (/Grundaussage)- die Claims - und die Prämissen befinden, die mittels Statistiken und anderen Belegen die These untermauern. 
-  Die verwendeten Texte stammen von essayforum.com und wurden zufällig ausgewählt. über die Autoren ist nichts weiter bekannt, allerdings ist es denkbar, dass Englisch nicht ihre Muttersprache ist und sie diese im schulischen Rahmen lernen.
-  Stab und Gurevych versahen die Essays anschließend mit Tokens und speicherten, wo sich Spannen befinden. 
-
-
-  Datenherkunft: Schüleressays/ learner Essays von nichtmuttersprachlern (englisch)
-  Mehrere Essays zu selben Themen; von Stab und gurevych annotiert
-  Von essayforum.com; randomly selected 
+  The foundation of the training data for this project consists of 402 student essays annotated by Stab and Gurevych. For each essay, the dataset includes information on where the core assertion of the text, otherwise known as the MajorClaim, supporting assertments, or the Claims, and the premises, that back up the thesis with statistics and other evidence, are located. 
+The texts used were sourced from essayforum.com and selected randomly. No further information is known about the authors, but it is conceivable that English may not be their first language and they are likely learning it in an educational context.
+Stab and Gurevych subsequently annotated the essays with tokens and recorded the locations of spans.
 
   quelle: https://aclanthology.org/J17-3005.pdf
 
@@ -121,7 +135,7 @@ The corpus consists of 402 essays, downloaded, and randomly selected, from essay
     \end{NiceTabular}
     \vfill
     \caption{5-fold cross-validation of the macro-f1}
-    \label{tab:my_label}
+    \label{tab:epoch_f1}
   \end{table}
 
 
@@ -136,15 +150,15 @@ The corpus consists of 402 essays, downloaded, and randomly selected, from essay
       Human upper bound & 0.886\\
       Baseline majority & 0.259\\
       \rowcolor{gray!25}
-      Baseline heuristic & 0.642\\
-      \textbf{CRF all features} & \textbf{0.867}\B\\
+      Baseline heuristic & 0.628\\
+      \textbf{CRF all features} & \textbf{0.849}\B\\
       \hline
       \textbf{Meinhof} & \T \I \\
       \rowcolor{gray!25}
       \textbf{spans} & \textbf{0.912}\\ 
     \end{NiceTabular}
-    \caption{Argument Component Identification (5-fold cross-validation)}
-    \label{tab:my_label}
+    \caption{Argument Component Identification (5-fold cross-validation \href{https://aclanthology.org/J17-3005.pdf}{as in Table C.1})}
+    \label{tab:ident_f1}
   \end{table}
 
   \begin{table}[!h]
@@ -158,13 +172,10 @@ The corpus consists of 402 essays, downloaded, and randomly selected, from essay
       Baseline majority & 0.257\\
       Baseline heuristic & 0.724\\
       \rowcolor{gray!25}
-      SVM only structural & 0.746\\
-      SVM all without prob and emb & 0.771\\
-      \rowcolor{gray!25}
-      SVM without genre-dependent & 0.742\\
       \textbf{SVM all features} & \textbf{0.773}\\
+      \textbf{ILP-balanced} & \textbf{0.823}\\
       \rowcolor{gray!25}
-      \textit{SVM and CRF (all features)} & no-eval \B \\
+      \textit{ILP and CRF} & no-eval \B \\
       \hline
       \textbf{Meinhof} & \T \I \\
       \rowcolor{gray!25}
@@ -177,11 +188,9 @@ The corpus consists of 402 essays, downloaded, and randomly selected, from essay
       \textit{full\_pipe} & \textit{TO-DO}\\
 
     \end{NiceTabular}
-    \caption{Argument Component Classification (5-fold cross-validation)}
-    \label{tab:my_label}
+    \caption{Argument Component Classification (5-fold cross-validation \href{https://aclanthology.org/J17-3005.pdf}{as in Table C.2})}
+    \label{tab:class_f1}
   \end{table}
 
   \section{training\dotfill}
-  \section{Previous Work: Stab and Gurevych 2017\dotfill}
-  In 2017, Stab and Gurevych revisited their own work on argumentation mining from 2014. Dissatisfied with the existing corpora at the time, they decided to make their own, which they extended in 2017. 
 \end{document}
