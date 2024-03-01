@@ -1,0 +1,208 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Define Article %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% sets fontsize to 12
+\documentclass[12]{article}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Using Packages %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{empheq}
+\usepackage{mdframed}
+\usepackage{booktabs}
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{psfrag}
+\usepackage{pgfplots}
+\usepackage{bm}
+\usepackage[english]{babel}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage[onehalfspacing]{setspace}
+\renewcommand{\familydefault}{\sfdefault}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% extra settings here
+% \newcommand\T{\rule{0pt}{2.6ex}}       % Top strut
+% \newcommand\B{\rule[-1.2ex]{0pt}{0pt}} % Bottom strut
+
+\newcommand\T{\rule{0pt}{3.6ex}}       % Top strut
+\newcommand\I{\rule[-1.25ex]{0pt}{0pt}} % Inner strut
+\newcommand\B{\rule[-1.8ex]{0pt}{0pt}} % Bottom strut
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% Page Setting %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\geometry{a4paper,top=2.5cm,bottom=2.5cm,left=4cm,right=3cm,marginparwidth=1.75cm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% Define some useful colors %%%%%%%%%%%%%%%%%%%%%%%%%%
+\definecolor{ocre}{RGB}{243,102,25}
+\definecolor{mygray}{RGB}{243,243,244}
+\definecolor{deepGreen}{RGB}{26,111,0}
+\definecolor{shallowGreen}{RGB}{235,255,255}
+\definecolor{deepBlue}{RGB}{61,124,222}
+\definecolor{shallowBlue}{RGB}{235,249,255}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% Define an orangebox command %%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand\orangebox[1]{\fcolorbox{ocre}{mygray}{\hspace{1em}#1\hspace{1em}}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% English Environments %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtheoremstyle{mytheoremstyle}{3pt}{3pt}{\normalfont}{0cm}{\rmfamily\bfseries}{}{1em}{{\color{black}\thmname{#1}~\thmnumber{#2}}\thmnote{\,--\,#3}}
+\newtheoremstyle{myproblemstyle}{3pt}{3pt}{\normalfont}{0cm}{\rmfamily\bfseries}{}{1em}{{\color{black}\thmname{#1}~\thmnumber{#2}}\thmnote{\,--\,#3}}
+\theoremstyle{mytheoremstyle}
+\newmdtheoremenv[linewidth=1pt,backgroundcolor=shallowGreen,linecolor=deepGreen,leftmargin=0pt,innerleftmargin=20pt,innerrightmargin=20pt,]{theorem}{Theorem}[section]
+\theoremstyle{mytheoremstyle}
+\newmdtheoremenv[linewidth=1pt,backgroundcolor=shallowBlue,linecolor=deepBlue,leftmargin=0pt,innerleftmargin=20pt,innerrightmargin=20pt,]{definition}{Definition}[section]
+\theoremstyle{myproblemstyle}
+\newmdtheoremenv[linecolor=black,leftmargin=0pt,innerleftmargin=10pt,innerrightmargin=10pt,]{problem}{Problem}[section]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Plotting Settings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepgfplotslibrary{colorbrewer}
+\pgfplotsset{width=8cm,compat=1.9}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Title & Author %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Argument Component Identification im Stile von Stab und Gurevych}
+\author{Hugo Meinhof, 815220}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+  \maketitle
+  \begin{abstract}
+  some abstract stuff goes here \href{https://aclanthology.org/J17-3005/}{Stab und Gurevych}
+  \end{abstract}
+  \section*{trainingsdaten}
+  402 von Stab und Gurevych annotierte Schüleressays bilden die Grundlage für die Trainingsdaten dieses Projekts. Für jeden Essay enthält der Datensatz die Information, wo sich die Kernbehauptung des Textes - der MajorClaim, sonstige Behauptungen zum Stützen der zentralen Aussage (/Grundaussage)- die Claims - und die Prämissen befinden, die mittels Statistiken und anderen Belegen die These untermauern. 
+  Die verwendeten Texte stammen von essayforum.com und wurden zufällig ausgewählt. über die Autoren ist nichts weiter bekannt, allerdings ist es denkbar, dass Englisch nicht ihre Muttersprache ist und sie diese im schulischen Rahmen lernen.
+  Stab und Gurevych versahen die Essays anschließend mit Tokens und speicherten, wo sich Spannen befinden. 
+
+
+  Datenherkunft: Schüleressays/ learner Essays von nichtmuttersprachlern (englisch)
+  Mehrere Essays zu selben Themen; von Stab und gurevych annotiert
+  Von essayforum.com; randomly selected 
+
+  quelle: https://aclanthology.org/J17-3005.pdf
+
+  Claim: semantische klasse, die eine behauptung aufstellt; stützt majorclaim 
+  MajorClaim: kernbehauptung(en) des textes 
+  prämissen: unterstützung/ untermauerung der Claims (zb statistiken) 
+
+  über baselines schreiben!
+
+  ``For finding the best-performing models, we conduct model selection on our training data using 5-fold cross-validation''
+
+
+  die essays wurden tokenisiert und gespeichert wo sich spannen befinden, welche rolle sie haben, und welche tokens dazugehören. diese daten werden von renes script erstellt was war das. damit modeelle damit lernen können, muss ein dataset erstellt werden, welches die daten aufbereitet und dem modell verständlich sortiert. dies ist die größte aufgabe beim training. da alle traininerten modelle auf dem selben datensatz basieren, gibt es für alle zusammen ein gemeinsames dataset. viele extraktions, aufbereitungs, und matching schritte bleiben für alle modelle gleich. unterschiede gibt es im grunde nur im letzten aufbereitungsschritt. das wird von den verschiedenen configs des datasets gehandhabt. es gibt für jedes modell eine eigene config, die den selben namen trägt, wie das modell. da sich die modelle nur darin unterscheiden wie die trainingsdaten aufbereitet sind, bedeutet das auch, dass ein trainingsscript für alle modelle verwendet werden kann, in dem nur die config angepasst werden muss. ich habe zudem darauf geachtet, dass die configs die selben namen tragen wie die modelle, damit alles reibungslos abläuft bessere erklärung des trainings scripts. das war jedoch nicht schon immer so. angefangen habe ich mit je einem trainings script pro modell. das ist zwar auf der einen seite nicht so anpassbar wie ein sript für alle, welches über command line arguments angepasst werden kann, hat jedoch auf der anderen seite den klaren vorteil, dass so ein einzelnes modell erstmal trainiert und ausgetestet werden kann, ohne dabei andere im hinterkopf behalten zu müssen. 
+  \section{evaluation}
+  \begin{table}[!h]
+    \centering
+    \begin{tabular}{c|c} 
+      \textbf{Model Epochs} &  \textbf{Makro-f1}\\ 
+      \hline
+      \hline
+      \textbf{full\_labels} & \\
+      4 & 0.579\\
+      5 & 0.631\\
+      6 & 0.716\\
+      7 & 0.740\\
+      8 & 0.752\\
+      9 & 0.757\\
+      10 & 0.759\\
+    \end{tabular}
+    \quad
+    \begin{tabular}{c|c} 
+      \hline
+      \textbf{spans} & \\
+      4 & 0.898\\
+      5 & 0.905\\
+      6 & 0.908\\
+      7 & 0.910\\
+      8 & 0.911\\
+      9 & 0.912\\
+      10 & 0.912\\
+      \hline
+      \textbf{simple} & \\
+      4 & 0.769\\
+      5 & 0.782\\
+      6 & 0.790\\
+      7 & 0.796\\
+      8 & 0.800\\
+      9 & 0.801\\
+      10 & 0.801\\
+      \hline
+      \textbf{sep\_tok\_full\_labels} & \\
+      4 & 0.749\\
+      5 & 0.801\\
+      6 & 0.816\\
+      7 & 0.824\\
+      8 & 0.832\\
+      9 & 0.837\\
+      10 & 0.838\\
+      \hline
+      \textbf{sep\_tok} & \\
+      4 & 0.843\\
+      5 & 0.849\\
+      6 & 0.858\\
+      7 & 0.864\\
+      8 & 0.864\\
+      9 & 0.865\\
+      10 & 0.867\\
+    \end{tabular}
+    \caption{5-fold cross-validation of the macro-f1}
+    \label{tab:my_label}
+  \end{table}
+
+
+  \begin{table}[!h]
+    \centering
+    \begin{tabular}{c|c} 
+      \Large\textbf{Argument Component Identification} &  \Large\textbf{Makro-f1}\\ 
+      \hline
+      \hline
+      \textbf{Stab und Gurevytch}& \T \I \\
+      Human upper bound & 0.886\\
+      Baseline majority & 0.259\\
+      Baseline heuristic & 0.642\\
+      \textbf{CRF all features} & \textbf{0.867} \B \\
+      \hline
+      \textbf{Meinhof} & \T \I \\
+      spans & 0.912 \B \\ 
+    \end{tabular}
+    \caption{Argument Component Identification (5-fold cross-validation)}
+    \label{tab:my_label}
+  \end{table}
+
+  \begin{table}[!h]
+    \centering
+    \begin{tabular}{c|c}
+      \Large\textbf{Argument Component Classification} &  \Large\textbf{Makro-f1}\\
+      \hline
+      \hline
+      \textbf{Stab und Gurevych} & \T \I \\
+      Baseline majority & 0.257\\
+      Baseline heuristic & 0.724\\
+      SVM only structural & 0.746\\
+      SVM all without prob and emb & 0.771\\
+      SVM without genre-dependent & 0.742\\
+      \textbf{SVM all features} & \textbf{0.773}\\
+      \textit{SVM and CRF (all features)} & no-eval \B \\
+      \hline
+      \textbf{Meinhof} & \T \I \\
+      full\_labels & 0.759\\
+      simple & 0.801\\
+      sep\_tok\_full\_labels & 0.838\\
+      sep\_tok & 0.867\\
+      \textit{full\_pipe} & \textit{TO-DO} \B \\
+
+    \end{tabular}
+    \caption{Argument Component Classification (5-fold cross-validation)}
+    \label{tab:my_label}
+  \end{table}
+
+  \section{training}
+  \section{Stab und Gurevych zusammenfassung}
+\end{document}
