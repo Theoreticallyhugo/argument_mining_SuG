@@ -289,7 +289,7 @@ def train(
         loud_print("done with all the uploadeing")
     # collect_meta(Path(output_dir), seed)
     # _________________________________________
-    return get_meta(Path(output_dir), seed, epochs)
+    # return get_meta(Path(output_dir), seed, epochs)
 
 
 def get_args():
@@ -353,14 +353,16 @@ if __name__ == "__main__":
     #   [0%:10%] + [20%:100%] (for a validation set of [10%:20%]), ...,
     #   [0%:90%] (for a validation set of [90%:100%]).
     tests_ds = datasets.load_dataset(
-        "essays_SuG",
+        "Theoreticallyhugo/essays_SuG",
         args.model,
         split=[f"train[{k}%:{k+20}%]" for k in range(0, 100, 20)],
+        trust_remote_code=True,
     )
     trains_ds = datasets.load_dataset(
-        "essays_SuG",
+        "Theoreticallyhugo/essays_SuG",
         args.model,
         split=[f"train[:{k}%]+train[{k+20}%:]" for k in range(0, 100, 20)],
+        trust_remote_code=True,
     )
 
     for train_ds, test_ds, index in zip(

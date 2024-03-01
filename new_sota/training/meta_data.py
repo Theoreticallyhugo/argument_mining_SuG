@@ -144,6 +144,7 @@ def calculate_cross_validation():
         output_list.append({"name": models_list[i]["name"], "epochs": {}})
         output_list[-1]["epochs"] = {}
         for epoch, data in models_list[i]["epochs"].items():
+            epoch = epoch.rjust(2, "0")
             cross_validation = {}
             for cvi, fold_data in data.items():
                 if cross_validation == {}:
