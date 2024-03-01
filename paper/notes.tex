@@ -75,7 +75,7 @@
   \begin{abstract}
   some abstract stuff goes here \href{https://aclanthology.org/J17-3005/}{Stab und Gurevych}
   \end{abstract}
-  \section*{trainingsdaten}
+  \section{trainingsdaten\dotfill}
   402 von Stab und Gurevych annotierte Schüleressays bilden die Grundlage für die Trainingsdaten dieses Projekts. Für jeden Essay enthält der Datensatz die Information, wo sich die Kernbehauptung des Textes - der MajorClaim, sonstige Behauptungen zum Stützen der zentralen Aussage (/Grundaussage)- die Claims - und die Prämissen befinden, die mittels Statistiken und anderen Belegen die These untermauern. 
   Die verwendeten Texte stammen von essayforum.com und wurden zufällig ausgewählt. über die Autoren ist nichts weiter bekannt, allerdings ist es denkbar, dass Englisch nicht ihre Muttersprache ist und sie diese im schulischen Rahmen lernen.
   Stab und Gurevych versahen die Essays anschließend mit Tokens und speicherten, wo sich Spannen befinden. 
@@ -97,35 +97,33 @@
 
 
   die essays wurden tokenisiert und gespeichert wo sich spannen befinden, welche rolle sie haben, und welche tokens dazugehören. diese daten werden von renes script erstellt was war das. damit modeelle damit lernen können, muss ein dataset erstellt werden, welches die daten aufbereitet und dem modell verständlich sortiert. dies ist die größte aufgabe beim training. da alle traininerten modelle auf dem selben datensatz basieren, gibt es für alle zusammen ein gemeinsames dataset. viele extraktions, aufbereitungs, und matching schritte bleiben für alle modelle gleich. unterschiede gibt es im grunde nur im letzten aufbereitungsschritt. das wird von den verschiedenen configs des datasets gehandhabt. es gibt für jedes modell eine eigene config, die den selben namen trägt, wie das modell. da sich die modelle nur darin unterscheiden wie die trainingsdaten aufbereitet sind, bedeutet das auch, dass ein trainingsscript für alle modelle verwendet werden kann, in dem nur die config angepasst werden muss. ich habe zudem darauf geachtet, dass die configs die selben namen tragen wie die modelle, damit alles reibungslos abläuft bessere erklärung des trainings scripts. das war jedoch nicht schon immer so. angefangen habe ich mit je einem trainings script pro modell. das ist zwar auf der einen seite nicht so anpassbar wie ein sript für alle, welches über command line arguments angepasst werden kann, hat jedoch auf der anderen seite den klaren vorteil, dass so ein einzelnes modell erstmal trainiert und ausgetestet werden kann, ohne dabei andere im hinterkopf behalten zu müssen. 
-  \section{evaluation}
+  \section{evaluation\dotfill}
   \begin{table}[!h]
     \centering
     \begin{tabular}{c|c} 
-      \textbf{Model Epochs} &  \textbf{Makro-f1}\\ 
+      \textbf{full\_labels epochs} & \textbf{Makro-f1}\\ 
       \hline
       \hline
-      \textbf{full\_labels} & \\
       4 & 0.579\\
       5 & 0.631\\
       6 & 0.716\\
       7 & 0.740\\
       8 & 0.752\\
       9 & 0.757\\
-      10 & 0.759\\
-    \end{tabular}
-    \quad
-    \begin{tabular}{c|c} 
+      10 & 0.759 \vspace{3ex}\\
+      \textbf{spans epochs} & \textbf{Makro-f1}\\
       \hline
-      \textbf{spans} & \\
+      \hline
       4 & 0.898\\
       5 & 0.905\\
       6 & 0.908\\
       7 & 0.910\\
       8 & 0.911\\
       9 & 0.912\\
-      10 & 0.912\\
+      10 & 0.912 \vspace{3ex}\\
+      \textbf{simple epochs} & \textbf{Makro-f1}\\
       \hline
-      \textbf{simple} & \\
+      \hline
       4 & 0.769\\
       5 & 0.782\\
       6 & 0.790\\
@@ -133,25 +131,31 @@
       8 & 0.800\\
       9 & 0.801\\
       10 & 0.801\\
+    \end{tabular}
+    \quad
+    \begin{tabular}{c|c} 
+      \textbf{sep\_tok\_full\_labels epochs} & \textbf{Makro-f1}\\
       \hline
-      \textbf{sep\_tok\_full\_labels} & \\
+      \hline
       4 & 0.749\\
       5 & 0.801\\
       6 & 0.816\\
       7 & 0.824\\
       8 & 0.832\\
       9 & 0.837\\
-      10 & 0.838\\
+      10 & 0.838 \vspace{3ex}\\
+      \textbf{sep\_tok epochs} & \textbf{Makro-f1}\\
       \hline
-      \textbf{sep\_tok} & \\
+      \hline
       4 & 0.843\\
       5 & 0.849\\
       6 & 0.858\\
       7 & 0.864\\
       8 & 0.864\\
       9 & 0.865\\
-      10 & 0.867\\
+      10 & 0.867 \vspace{25ex}\\
     \end{tabular}
+    \vfill
     \caption{5-fold cross-validation of the macro-f1}
     \label{tab:my_label}
   \end{table}
@@ -160,7 +164,7 @@
   \begin{table}[!h]
     \centering
     \begin{tabular}{c|c} 
-      \Large\textbf{Argument Component Identification} &  \Large\textbf{Makro-f1}\\ 
+      \large\textbf{Argument Component Identification} &  \large\textbf{Makro-f1}\\ 
       \hline
       \hline
       \textbf{Stab und Gurevytch}& \T \I \\
@@ -170,7 +174,7 @@
       \textbf{CRF all features} & \textbf{0.867} \B \\
       \hline
       \textbf{Meinhof} & \T \I \\
-      spans & 0.912 \B \\ 
+      \textbf{spans} & \textbf{0.912} \B \\ 
     \end{tabular}
     \caption{Argument Component Identification (5-fold cross-validation)}
     \label{tab:my_label}
@@ -179,7 +183,7 @@
   \begin{table}[!h]
     \centering
     \begin{tabular}{c|c}
-      \Large\textbf{Argument Component Classification} &  \Large\textbf{Makro-f1}\\
+      \large\textbf{Argument Component Classification} &  \large\textbf{Makro-f1}\\
       \hline
       \hline
       \textbf{Stab und Gurevych} & \T \I \\
@@ -195,7 +199,7 @@
       full\_labels & 0.759\\
       simple & 0.801\\
       sep\_tok\_full\_labels & 0.838\\
-      sep\_tok & 0.867\\
+      \textbf{sep\_tok} & \textbf{0.867}\\
       \textit{full\_pipe} & \textit{TO-DO} \B \\
 
     \end{tabular}
@@ -203,6 +207,6 @@
     \label{tab:my_label}
   \end{table}
 
-  \section{training}
-  \section{Stab und Gurevych zusammenfassung}
+  \section{training\dotfill}
+  \section{Stab und Gurevych zusammenfassung\dotfill}
 \end{document}
