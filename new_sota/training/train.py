@@ -298,7 +298,9 @@ def train(
 
     # return the evaluation scores for all epochs as a list
     for i, result in enumerate(meta_list):
-        save_meta(output_dir, seed, i + 1, result, cross_validation_index)
+        save_meta(
+            Path(output_dir), seed, i + 1, result, cross_validation_index
+        )
     return meta_list
 
 
