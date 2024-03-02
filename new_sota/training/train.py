@@ -254,14 +254,16 @@ def train(
     # run simple training for better maintainability
 
     args = TrainingArguments(
-        output_dir,
+        output_dir=output_dir,
         overwrite_output_dir=True,
+        auto_find_batch_size=True,
         evaluation_strategy="epoch",
         save_strategy="epoch",
         learning_rate=2e-5,
         num_train_epochs=epochs,
         weight_decay=0.01,
         push_to_hub=push,
+        hub_strategy="all_checkpoints",
         seed=seed,
     )
 
