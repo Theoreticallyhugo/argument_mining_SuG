@@ -18,6 +18,7 @@
 \usepackage{psfrag}
 \usepackage{pgfplots}
 \usepackage{bm}
+\usepackage{changepage}
 \usepackage[english]{babel}
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
 \usepackage[onehalfspacing]{setspace}
@@ -100,11 +101,11 @@ several tasks in one model (Moens 2013).'' I have trained such model, full\_labe
   test
   \section{Finding Argumentation Components}
   I have trained and compared multiple models and methods for both identifying and classifying argumentation components. From that process, five different models emerged, in various stages of simplification and mutual support. All of them are finetuned versions of longformer\cite{beltagy2020longformer}, the long document transformer.
-  \subsection{full labels}
+  \subsection{full labels} \label{full labels}
   Just like Stab and Gurevych recommended in 2017, I tried to train a model that combined the tasks of argument component identification and classification. For that I used the labels ``B-MajorClaim'', ``I-MajorClaim'', ``B-Claim'', ``I-Claim'',``B-Premise'', ``I-Premise'', and ``O''. The first Part of each label carries information for the argument component identification, whilst the second part does so for the classification. Full labels performs worse than Stab and Gurevychs ILP-balanced model\cite{stab-gurevych-2017-parsing}. However this is not an apples to apples comparison, as there is no 5-fold cross-validated evaluation data available for the pipeline, with the ILP model, meaning that it may perform worse than the full labels model. 
-  \subsection{spans}
+  \subsection{spans} \label{spans}
   Once again, just like Stab and Gurevych in 2017, i came to realise that splitting up the argument component identification and classification could yield overall improvements. The spans model takes care of the first part of the pipeline, the identification. It uses the labels ``B'', ``I'', and ``O''. Reducing the number of labels from seven to three, and limiting the task to identifying the spans, greatly improved the models performance, compared to full labels.
-  \subsection{simple}
+  \subsection{simple} \label{simple}
   With the performance increase of the spans model in mind, I created the simple model. It uses the labels ``MajorClaim'', ``Claim'', ``Premise'', ``X\_placeholder\_X'', and ``O''.The X\_placeholder\_X label however is never annotated in the entire dataset, and hence never used. I discuss it in the section \ref{problems}.
  The idea of this model is the exact same as with the simple model, except this time its for the classification task instead of identification. The lack of information regarding where spans are, would be made up for in the post processing. There, for each span that has been found by the spans model, the pipeline would check what labels were annotated. The most commonly annotated label within the span would then be applied to the entire span.  
   \begin{verbatim}
@@ -112,9 +113,25 @@ several tasks in one model (Moens 2013).'' I have trained such model, full\_labe
 ``O'', ``Claim'', ``Claim'', ``Premise'', ``Premise'', ``Claim'', ``Claim''
   \end{verbatim}
   This synthetic example shows a span without its context. Within it, Claim is the most commonly annotated label, and so the post processing would consider the entire span to be of the type ``Claim''.
-  \subsection{sep tok full labels}
-  This model takes advantage of another way in which the spans model can support a model that follows. Not only can the information on where spans are be used during post processing, but also before the inference or training. The preprocessing for this model places class and separator tokens in the text data, in order to signal where spans are. During pretraining, separator tokens ``which is used when building a sequence from multiple sequences, e.g. two sequences for sequence classification or for a text and a question for question answering. It is also used as the last token of a sequence built with special tokens.'' ``which is used when doing sequence classification (classification of the whole sequence instead of per-token classification). It is the first token of the sequence when built with special tokens.''
-  \subsection{pipeline}
+  \subsection{sep tok full labels} \label{sep tok full labels}
+  This model takes advantage of another way in which the spans model can support a model that follows. Not only can the information on where spans are be used during post processing, but also before the inference or training. The preprocessing for this model places class and separator tokens in the text data, in order to signal where spans are. They are learned during pretraining and defined in the huggingface documentation of longformer as follows:
+  \vspace{1ex}
+  \begin{adjustwidth}{0.5cm}{0.5cm}
+  cls\_token: \verb|<s>|\\
+    ``The classifier token which is used when doing sequence classification (classification of the whole sequence instead of per-token classification). It is the first token of the sequence when built with special tokens.'' \cite{LongformerTokenizer} \vspace{1ex}\\
+  sep\_token: \verb|</s>|\\
+  ``The separator token, which is used when building a sequence from multiple sequences, e.g. two sequences for sequence classification or for a text and a question for question answering. It is also used as the last token of a sequence built with special tokens.'' \cite{LongformerTokenizer}\vspace{-2ex}\\
+  \end{adjustwidth}
+  So, the model uses the same labels as the full labels model, ``B-MajorClaim'', ``I-MajorClaim'', ``B-Claim'', ``I-Claim'',``B-Premise'', ``I-Premise'', and ``O'', but differentiates itself through the text it is being fed. This means that for this model, input looks like in this synthetic example:
+  \begin{verbatim}
+``<s>'', ``we'', ``should'', ``attach'', ``more'', ``</s>'', 
+``O'', ``B-Claim'', ``I-Claim'', ``I-Claim'', ``I-Claim'', ``O''
+  \end{verbatim}
+  \subsection{sep tok} \label{sep tok}
+  Both the models simple (\ref{simple}), and sep tok full labels (\ref{sep tok full labels}) showed improvements over the initial full labels model (\ref{full labels}). Therefore, this model was created, taking advantage of both ideas. It uses the labels ``MajorClaim'', ``Claim'', ``Premise'', ``X\_placeholder\_X'', and ``O'', just like simple, and processes texts with insertet separation tokens, like sep tok full labels. It comes to no surprise then, that this model performs better than simple and sep tok full labels.
+  \subsection{pipeline} \label{pipeline}
+  The pipeline handles argument component identification and classification individually, and uses the best model for each task. Running the pipeline starts with inference on the input strings, with the spans model. The inference is handled by the huggingface pipeline object. Its output is then used to inject class and separation tokens into the input strings. \textcolor{red}{spans shorter than four are ignored. no further postprocessing. TODO.} The resulting texts are then fed into the sep tok model, one again handled by a huggingface pipeline. 
+  Its outputs are used in conjuction with the inputs. First, the cls and sep tokens are used to identify the spans within each text. Then, all tokens that lie within each span are found, counted, the most frequent for each identified, and then applied to the entire span. If a span is identified, but not labeled, because sep tok labled all tokens within it as ``O'', it is deleted.
   \subsection{problems} \label{problems}
   - B and I labels are cool and all, but what use are they, when a span of labels begins with I, or when a random word is dropped from a span
   - i get cuda errors when running NER at an even number of labels. hence i am using X\_placeholder\_X.
