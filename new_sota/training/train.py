@@ -45,6 +45,7 @@ def train(
     loud_print(f"for {epochs} epochs,")
     loud_print(f"cross-validation index {cross_validation_index}")
     loud_print(f"pushing {push}")
+    meta_list = []
     # our texts never get longer than that, hence this is basically constant
     max_text_length = 700
     loud_print(f"working with max text length {max_text_length}")
@@ -236,6 +237,7 @@ def train(
         save_meta(
             Path(output_dir), seed, epochs, all_metrics, cross_validation_index
         )
+        meta_list.append(all_metrics)
         return all_metrics
 
     # _________________________________________
@@ -293,6 +295,11 @@ def train(
     # collect_meta(Path(output_dir), seed)
     # _________________________________________
     # return get_meta(Path(output_dir), seed, epochs)
+
+    # return the evaluation scores for all epochs as a list
+    for i, result in enumerate(meta_list):
+        save_meta(output_dir, seed, i + 1, result, cross_validation_index)
+    return meta_list
 
 
 def get_args():
