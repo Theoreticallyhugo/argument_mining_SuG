@@ -26,9 +26,5 @@ The argument_mining_SuG project implements models for the identification of argu
 - dual (triple) step pipeline, spans model finds the spans, and is used to inject separator tokens into the text. then the sep_tok model has both the info where spans are, and an easier time labeling because of less labels it has to learn. in the end, the label for each span (determined by the first model) is determined by a majority score, calculated from all labels within one span. this ensures that the span model has an easy task, and the second model is supported, both by being shown where the spans are, and by having the postprocessing of having its labels mapped to the right spans. 
 
 ## stats
-at epoch 5
-- full_labels 0.684 0.684
-- spans 0.912 0.913
-- simple 0.782 0.783
-- sep_tok 0.832 0.844
-- sep_tok_full_labels 0.815 0.782
+all models are evaluated for the epochs 4 through 7 with 5-fold cross-validation
+reference ./new_sota/training/meta_data/

@@ -43,6 +43,7 @@ def train(
     loud_print(f"running model {model}")
     loud_print(f"training on seed {seed},")
     loud_print(f"for {epochs} epochs,")
+    loud_print(f"cross-validation index {cross_validation_index}")
     loud_print(f"pushing {push}")
     # our texts never get longer than that, hence this is basically constant
     max_text_length = 700
@@ -336,44 +337,53 @@ def get_args():
 
 if __name__ == "__main__":
     args = get_args()
-    assert args.model in [
+    model_names = [
         "full_labels",
         "spans",
         "simple",
         "sep_tok",
         "sep_tok_full_labels",
+        "all",
     ]
 
-    # TODO:
-    #   10-fold cross-validation (see also next section on rounding behavior):
-    #   The validation datasets are each going to be 10%:
-    #   [0%:10%], [10%:20%], ..., [90%:100%].
-    #   And the training datasets are each going to be the complementary 90%:
-    #   [10%:100%] (for a corresponding validation set of [0%:10%]),
-    #   [0%:10%] + [20%:100%] (for a validation set of [10%:20%]), ...,
-    #   [0%:90%] (for a validation set of [90%:100%]).
-    tests_ds = datasets.load_dataset(
-        "Theoreticallyhugo/essays_SuG",
-        args.model,
-        split=[f"train[{k}%:{k+20}%]" for k in range(0, 100, 20)],
-        trust_remote_code=True,
-    )
-    trains_ds = datasets.load_dataset(
-        "Theoreticallyhugo/essays_SuG",
-        args.model,
-        split=[f"train[:{k}%]+train[{k+20}%:]" for k in range(0, 100, 20)],
-        trust_remote_code=True,
-    )
+    assert args.model in model_names
 
-    for train_ds, test_ds, index in zip(
-        trains_ds, tests_ds, range(len(tests_ds))
-    ):
-        train(
-            args.model,
-            args.seed,
-            args.epochs,
-            train_ds,
-            test_ds,
-            index,
-            args.push,
+    if args.model == "all":
+        models = model_names[:-1]
+    else:
+        models = [args.model]
+
+    for model in models:
+        # TODO:
+        #   10-fold cross-validation (see also next section on rounding behavior):
+        #   The validation datasets are each going to be 10%:
+        #   [0%:10%], [10%:20%], ..., [90%:100%].
+        #   And the training datasets are each going to be the complementary 90%:
+        #   [10%:100%] (for a corresponding validation set of [0%:10%]),
+        #   [0%:10%] + [20%:100%] (for a validation set of [10%:20%]), ...,
+        #   [0%:90%] (for a validation set of [90%:100%]).
+        tests_ds = datasets.load_dataset(
+            "Theoreticallyhugo/essays_SuG",
+            model,
+            split=[f"train[{k}%:{k+20}%]" for k in range(0, 100, 20)],
+            trust_remote_code=True,
         )
+        trains_ds = datasets.load_dataset(
+            "Theoreticallyhugo/essays_SuG",
+            model,
+            split=[f"train[:{k}%]+train[{k+20}%:]" for k in range(0, 100, 20)],
+            trust_remote_code=True,
+        )
+
+        for train_ds, test_ds, index in zip(
+            trains_ds, tests_ds, range(len(tests_ds))
+        ):
+            train(
+                model,
+                args.seed,
+                args.epochs,
+                train_ds,
+                test_ds,
+                index,
+                args.push,
+            )
