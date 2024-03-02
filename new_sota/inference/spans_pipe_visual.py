@@ -40,7 +40,7 @@ results = [
     out
     for out in tqdm(
         pipe(
-            KeyDataset(ds["test"], "text"),
+            KeyDataset(ds["train"], "text"),
             batch_size=8,
         )
     )
@@ -48,7 +48,7 @@ results = [
 
 # freeing up vram
 del pipe
-texts = ds["test"]["text"]
+texts = ds["train"]["text"]
 
 print("weeding spans that are too short")
 # remove spans that are considered too short
@@ -108,9 +108,9 @@ for i in range(len(results)):
 # highlight the spans that were found
 for i in range(len(cls_tok)):
     print(f">>> text {i}")
-    text = ds["test"]["text"][i]
-    gold_cls_tok = ds["test"]["span_begins"][i]
-    gold_sep_tok = ds["test"]["span_ends"][i]
+    text = ds["train"]["text"][i]
+    gold_cls_tok = ds["train"]["span_begins"][i]
+    gold_sep_tok = ds["train"]["span_ends"][i]
     inside_gold = False
     inside_inference = False
     for letter in range(len(text)):
@@ -149,11 +149,11 @@ for i in range(len(cls_tok)):
         break
 
 # highlight gold-spans in green
-for i in range(len(ds["test"]["text"])):
+for i in range(len(ds["train"]["text"])):
     print(f">>> text {i}")
-    text = ds["test"]["text"][i]
-    tmp_cls_tok = ds["test"]["span_begins"][i]
-    tmp_sep_tok = ds["test"]["span_ends"][i]
+    text = ds["train"]["text"][i]
+    tmp_cls_tok = ds["train"]["span_begins"][i]
+    tmp_sep_tok = ds["train"]["span_ends"][i]
     for letter in range(len(text)):
         if letter in tmp_cls_tok:
             # if a span starts here, set fore to green
@@ -173,7 +173,7 @@ for i in range(len(cls_tok)):
     print(f">>> text {i}")
     for j in range(len(cls_tok[i])):
         brk = input(
-            KeyDataset(ds["test"], "text")[i][cls_tok[i][j] : sep_tok[i][j]]
+            KeyDataset(ds["train"], "text")[i][cls_tok[i][j] : sep_tok[i][j]]
         )
         if brk != "":
             break
@@ -210,7 +210,7 @@ pipe_tokens = [tokenizer(text, truncation=True) for text in texts]
 
 gold_tokens = [
     tokenizer(text, truncation=True, is_split_into_words=True)
-    for text in dss["test"]["tokens"]
+    for text in dss["train"]["tokens"]
 ]
 
 for i in range(len(pipe_tokens)):
