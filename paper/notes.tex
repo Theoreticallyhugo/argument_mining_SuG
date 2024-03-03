@@ -90,7 +90,7 @@ are not integrated in the joint modeling approach. For this reason, it is worthw
 experiment in future work with structured machine learning methods that incorporate
 several tasks in one model (Moens 2013).'' I have trained such model, full\_labels, which sadly doesnt reach the f1 of the SuG ILP model yet.
   \subsection{Goal of my work}
-  For this paper I have attempted to surpass the models for argument component identification and classification, as shown in Figure~\ref{fig:model_tree}. In general, the identification regards the question of where an argument component, like MajorClaim, will be located, without knowing what type it will be. Then, the classification task is the labeling of what kind of argument component we are dealing with. Stab and Gurevych trained models for each task, and my goal was to surpass them.  \textcolor{red}{ELABORATE AND REFERENCE FIGURE -- eplain what a span is} 
+  For this paper I have attempted to surpass the models for argument component identification and classification, as shown in Figure~\ref{fig:model_tree}. In general, the identification regards the question of where an argument component, like MajorClaim, will be located, without knowing what type it will be. Then, the classification task is the labeling of what kind of argument component we are dealing with. Stab and Gurevych trained models for each task, and my goal was to surpass them. All of the code i wrote can be found on github at \href{https://github.com/Theoreticallyhugo/argument_mining_SuG}{``Theoreticallyhugo/argument\_mining\_SuG''}. All the models are available on Hugging Face, at \href{https://huggingface.co/Theoreticallyhugo}{``Theoreticallyhugo/longformer-``}, followed by the respective name of the model. \textcolor{red}{ELABORATE AND REFERENCE FIGURE -- eplain what a span is} 
   \begin{figure}[!h]
     \centering
     \includegraphics[width=1\linewidth]{../s-g_model_tree.png}
@@ -100,13 +100,13 @@ several tasks in one model (Moens 2013).'' I have trained such model, full\_labe
   \subsection{my previous work}
   test
   \section{Finding Argumentation Components}
-  I have trained and compared multiple models and methods for both identifying and classifying argumentation components. From that process, five different models emerged, in various stages of simplification and mutual support. All of them are finetuned versions of longformer\cite{beltagy2020longformer}, the long document transformer.
+  I have trained and compared multiple models and methods for both identifying and classifying argumentation components. From that process, five different models emerged, in various stages of simplification and mutual support. All of them are finetuned versions of longformer\cite{beltagy2020longformer}, the long document transformer. 
   \subsection{full labels} \label{full labels}
   Just like Stab and Gurevych recommended in 2017, I tried to train a model that combined the tasks of argument component identification and classification. For that I used the labels ``B-MajorClaim'', ``I-MajorClaim'', ``B-Claim'', ``I-Claim'',``B-Premise'', ``I-Premise'', and ``O''. The first Part of each label carries information for the argument component identification, whilst the second part does so for the classification. Full labels performs worse than Stab and Gurevychs ILP-balanced model\cite{stab-gurevych-2017-parsing}. However this is not an apples to apples comparison, as there is no 5-fold cross-validated evaluation data available for the pipeline, with the ILP model, meaning that it may perform worse than the full labels model. 
   \subsection{spans} \label{spans}
   Once again, just like Stab and Gurevych in 2017, i came to realise that splitting up the argument component identification and classification could yield overall improvements. The spans model takes care of the first part of the pipeline, the identification. It uses the labels ``B'', ``I'', and ``O''. Reducing the number of labels from seven to three, and limiting the task to identifying the spans, greatly improved the models performance, compared to full labels.
   \subsection{simple} \label{simple}
-  With the performance increase of the spans model in mind, I created the simple model. It uses the labels ``MajorClaim'', ``Claim'', ``Premise'', ``X\_placeholder\_X'', and ``O''.The X\_placeholder\_X label however is never annotated in the entire dataset, and hence never used. I discuss it in the section \ref{problems}.
+  With the performance increase of the spans model in mind, I created the simple model. It uses the labels ``MajorClaim'', ``Claim'', ``Premise'', ``X\_placeholder\_X'', and ``O''.The X\_placeholder\_X label however is never annotated in the entire dataset, and hence never used. It is discusses in the section \ref{the placeholder label}.
  The idea of this model is the exact same as with the simple model, except this time its for the classification task instead of identification. The lack of information regarding where spans are, would be made up for in the post processing. There, for each span that has been found by the spans model, the pipeline would check what labels were annotated. The most commonly annotated label within the span would then be applied to the entire span.  
   \begin{verbatim}
 ``we'', ``should'', ``attach'', ``more'', ``importance'', ``to'', ``cooperation''
@@ -133,8 +133,64 @@ several tasks in one model (Moens 2013).'' I have trained such model, full\_labe
   The pipeline handles argument component identification and classification individually, and uses the best model for each task. Running the pipeline starts with inference on the input strings, with the spans model. The inference is handled by the huggingface pipeline object. Its output is then used to inject class and separation tokens into the input strings. \textcolor{red}{spans shorter than four are ignored. no further postprocessing. TODO.} The resulting texts are then fed into the sep tok model, one again handled by a huggingface pipeline. 
   Its outputs are used in conjuction with the inputs. First, the cls and sep tokens are used to identify the spans within each text. Then, all tokens that lie within each span are found, counted, the most frequent for each identified, and then applied to the entire span. If a span is identified, but not labeled, because sep tok labled all tokens within it as ``O'', it is deleted.
   \subsection{problems} \label{problems}
-  - B and I labels are cool and all, but what use are they, when a span of labels begins with I, or when a random word is dropped from a span
-  - i get cuda errors when running NER at an even number of labels. hence i am using X\_placeholder\_X.
+  \subsubsection{argument component identification}
+  Distinguishing between ``B'' and ``I'' labels is supposed to allow proper identification of where spans begin and end. However, there are multiple ambiguous situations, which complicate the process. \\
+  If, for example, a span starts out with an I label, it is unclear whether this truly is where the span begins. Possibly this I label is correct,, but should be preceeded by a B label, but it could also be the case that it isnt correct, and that the I should be a B. There also are situations where after a span, there is one O, followed by a couple of I labels. Here, a third possibilty is added, being that this gap should be filled with an I, making it one long span.
+  \vspace{2ex} \\
+  Problem 1:
+  \vspace{-1.5ex}
+  \begin{verbatim}
+``we'', ``should'', ``attach'', ``more'', ``importance'', ``to'', ``cooperation''
+``O'',  ``I'',      ``I'',      ``I'',    ``I'',          ``I'',  ``I''
+  \end{verbatim}
+  \vspace{-4ex}
+  Possible resolutions:\\
+  O label is begin, span starts one token earlier
+  \vspace{-1.5ex}
+  \begin{verbatim}
+``we'', ``should'', ``attach'', ``more'', ``importance'', ``to'', ``cooperation''
+``B'',  ``I'',      ``I'',      ``I'',    ``I'',          ``I'',  ``I''
+  \end{verbatim}
+  \vspace{-4ex}
+  O label is correct, and first inside label should be begin instead
+  \vspace{-1.5ex}
+  \begin{verbatim}
+``we'', ``should'', ``attach'', ``more'', ``importance'', ``to'', ``cooperation''
+``O'',  ``B'',      ``I'',      ``I'',    ``I'',          ``I'',  ``I''
+  \end{verbatim}
+  \vspace{-2ex}
+  Problem 2:
+  \vspace{-1.5ex}
+  \begin{verbatim}
+``we'', ``should'', ``attach'', ``more'', ``importance'', ``to'', ``cooperation''
+``B'',  ``I'',      ``I'',      ``O'',    ``I'',          ``I'',  ``I''
+  \end{verbatim}
+  \vspace{-4ex}
+  Possible resolutions:\\
+  skipped label is begin, making two spans, no gap
+  \vspace{-1.5ex}
+  \begin{verbatim}
+``we'', ``should'', ``attach'', ``more'', ``importance'', ``to'', ``cooperation''
+``B'',  ``I'',      ``I'',      ``B'',    ``I'',          ``I'',  ``I''
+  \end{verbatim}
+  \vspace{-4ex}
+  skipped label is inside, making one span, no gap
+  \vspace{-1.5ex}
+  \begin{verbatim}
+``we'', ``should'', ``attach'', ``more'', ``importance'', ``to'', ``cooperation''
+``B'',  ``I'',      ``I'',      ``I'',    ``I'',          ``I'',  ``I''
+  \end{verbatim}
+  \vspace{-4ex}
+  skipped label is correct, and should be followed by begin, making two spans, with gap
+  \vspace{-1.5ex}
+  \begin{verbatim}
+``we'', ``should'', ``attach'', ``more'', ``importance'', ``to'', ``cooperation''
+``B'',  ``I'',      ``I'',      ``O'',    ``B'',          ``I'',  ``I''
+  \end{verbatim}
+  \vspace{-4ex}
+  Additionally there is the issue of rogue labels, meaning that there sometimes are one, two, or three inside-label-long spans at seemingly random positions. For now, any span shorter than three is ignored, but considering the second problem, this could delete important parts, or even entire spans, because they are split.
+  \subsubsection{the ``X\_placeholder\_X'' label} \label{the placeholder label}
+  For some reason CUDA kept crashing on the backwards pass, when the training for NER of longformer ran with an even number of labels. Therefore, the ``X\_placeholder\_X'' label was introduced. It is never annotated and never part of the Models output, but fixes the issue with CUDA.
   \section{trainingsdaten\dotfill}
   The foundation of the training data for this project consists of 402 student essays annotated by Stab and Gurevych. For each essay, the dataset includes information on where the core assertion of the text, otherwise known as the MajorClaim, supporting assertments, or the Claims, and the premises, that back up the thesis with statistics and other evidence, are located. 
 The texts used were sourced from essayforum.com and selected randomly. No further information is known about the authors, but it is conceivable that English may not be their first language and they are likely learning it in an educational context.
@@ -155,28 +211,50 @@ Stab and Gurevych subsequently annotated the essays with tokens and recorded the
 
 The corpus consists of 402 essays, downloaded, and randomly selected, from essayforum.com. 
   \section{evaluation\dotfill}
+  For reproduceablility, every training and inference was seeded. Furthermore, all evaluation was 5-fold cross-validated, just like Stab and Gurevych did with their models, on the same data. However all evaluation is done on the raw inference, without any postprocessing.\\
+
+  With a Makro-f1 score of 0.77, the full labels model, running both the argument component identification and classification in one go, already performs quite well. Considering that its a fast and simple single step solution, it certainly has its perks. It also needs to be mentioned, that the model surpasses the majority and heuristic baselines for both argument component identification and classification as presented by Stab and Gurevych.
+  From epoch 7 onward, we get to see very little improvements. Epoch 14 is getting the best results, marking the beginning of a mostly flat curve, followed by very little change in either direction. Interestingly there seems to be no overfitting within the 20 epochs of training.
+
+  For the argument component identification task, Stab and Gurevych were happy to announce that their models performance came very close to their human annotators. I am equally happy to announce that the spans model has surpassed both their models, as well as human performance. Since Table 8 and Table C.1 in \cite{stab-gurevych-2017-parsing} report different scores for CRF all features, both are included in Table \ref{tab:ident_f1}\\
+  The model takes only three epochs to perform very well. Considering scores, there isn't really a point in training beyond five epochs, but from epoch 15 onward, the curve is almost flat. Once again there are no signs of overfitting within the 20 Epochs of training. \textcolor{red}{DOES IT BEAT SOTA?}
+
+  Out of the three models for argument component classification, the simple model performs the worst. Nevertheless it achieves better scores than the baselines, the full labels model, and comes somewhat close to the performance of Stab and Gurevychs ILP-balanced model. Comparing simple to their standalone model for classification, SVM all features, it surpasses the scores, as well as the baselines.\\
+  In epochs six through 14, the model gets very similar scores, only to be improved upon by about 0.01 five epochs later. Therefore, an f1 of 8.811 can be claimed, but 0.799 at epoch six would be more sensible.\\
+  Here too, the scores eventually settle, without really worsening again, indicating that there is no overfitting yet.
+
+  The sep tok full labels model is the first to outperform Stab and Gurevychs ILP-balanced, without being the best in the group yet. Its scores fluctuate throughout the epochs, with the most significant improvements having taken place till epoch eleven, and eventual stabilising towards epoch 18.
+
+  Sep tok is the best performing model so far, showing better scores than the baselines, other longformer based, and Stab and Gurevychs models. It gains the most performance until about epoch eight, with fluctuation, but eventual improvements until epoch 16. This is also the only model that shows performance dips after that epoch, meaning that there is no flattening of the curve, as observed with the other models.
   \begin{table}[!h]
     \centering
-    \begin{NiceTabular}{c||c|c|c|c|c} 
+    \begin{NiceTabular}{c||c|c|c|c|c}
       \CodeBefore
         \rowcolors{2}{gray!25}{white}
       \Body
-      \textbf{Makro-f1} & \textbf{full labels} & \textbf{spans} & \textbf{simple} & \textbf{sep tok full labels} & \textbf{sep tok} \\ 
+      \textbf{Makro-f1} & \textbf{full labels} & \textbf{spans} & \textbf{simple} & \textbf{sep tok full labels} & \textbf{sep tok}\\
       \hline
       \hline
-      4 & 0.579 & 0.898 & 0.769 & 0.749 & 0.843\T\\
-      5 & 0.631 & 0.905 & 0.782 & 0.801 & 0.849\\
-      6 & 0.716 & 0.908 & 0.790 & 0.816 & 0.858\\
-      7 & 0.740 & 0.910 & 0.796 & 0.824 & 0.864\\
-      8 & 0.752 & 0.911 & 0.800 & 0.832 & 0.864\\
-      9 & 0.757 & 0.912 & 0.801 & 0.837 & 0.865\\
-      10 & 0.759 & 0.912 & 0.801 & 0.838 & 0.867\\
-      11 & 0.761 & 0.912 & 0.803 & 0.833 & 0.866\\
-      12 & 0.763 & 0.914 & 0.803 & 0.837 & 0.865\\
-      13 & 0.763 & 0.913 & 0.802 & 0.844 & 0.867\\
-      14 & 0.767 & 0.915 & 0.801 & 0.840 & 0.867\\
-      15 & 0.766 & 0.914 & 0.801 & 0.841 & 0.868\\
-      16 & 0.766 & 0.915 & 0.803 & 0.846 & 0.870\\
+      01 & 0.378 & 0.798 & 0.668 & 0.525 & 0.754\T\\
+      02 & 0.522 & 0.889 & 0.743 & 0.670 & 0.810\\
+      03 & 0.635 & 0.902 & 0.777 & 0.795 & 0.840\\
+      04 & 0.730 & 0.908 & 0.788 & 0.816 & 0.854\\
+      05 & 0.743 & 0.912 & 0.792 & 0.818 & 0.863\\
+      06 & 0.752 & 0.909 & 0.799 & 0.830 & 0.861\\
+      07 & 0.757 & 0.911 & 0.796 & 0.829 & 0.867\\
+      08 & 0.759 & 0.911 & 0.798 & 0.833 & 0.870\\
+      09 & 0.759 & 0.912 & 0.796 & 0.841 & 0.868\\
+      10 & 0.763 & 0.914 & 0.801 & 0.841 & 0.871\\
+      11 & 0.765 & 0.911 & 0.800 & 0.845 & 0.872\\
+      12 & 0.766 & 0.913 & 0.800 & 0.841 & 0.866\\
+      13 & 0.768 & 0.912 & 0.803 & 0.839 & 0.870\\
+      14 & \textbf{0.770} & 0.913 & 0.800 & 0.842 & 0.873\\
+      15 & 0.767 & \textbf{0.915} & 0.806 & 0.845 & 0.874\\
+      16 & 0.770 & 0.914 & 0.807 & 0.844 & \textbf{0.876}\\
+      17 & 0.771 & 0.914 & 0.809 & 0.845 & 0.874\\
+      18 & 0.770 & 0.914 & 0.809 & \textbf{0.846} & 0.871\\
+      19 & 0.771 & 0.915 & \textbf{0.811} & 0.846 & 0.875\\
+      20 & 0.770 & 0.915 & 0.810 & 0.847 & 0.874\\
     \end{NiceTabular}
     \vfill
     \caption{5-fold cross-validation of the macro-f1}
@@ -196,11 +274,11 @@ The corpus consists of 402 essays, downloaded, and randomly selected, from essay
       Baseline majority & 0.259\\
       \rowcolor{gray!25}
       Baseline heuristic & 0.628\\
-      \textbf{CRF all features} & \textbf{0.849}\B\\
+      \textbf{CRF all features} & \textbf{0.849 or 0.867}\B\\
       \hline
       \textbf{Meinhof} & \T \I \\
       \rowcolor{gray!25}
-      \textbf{spans} & \textbf{0.912}\\ 
+      \textbf{spans} & \textbf{0.915}\\ 
     \end{NiceTabular}
     \caption{Argument Component Identification (5-fold cross-validation as in Table C.1 of \cite{stab-gurevych-2017-parsing})}
     \label{tab:ident_f1}
@@ -220,15 +298,15 @@ The corpus consists of 402 essays, downloaded, and randomly selected, from essay
       \textbf{SVM all features} & \textbf{0.773}\\
       \textbf{ILP-balanced} & \textbf{0.823}\\
       \rowcolor{gray!25}
-      \textit{ILP and CRF} & no-eval \B \\
+      \textit{ILP and CRF pipeline} & no-eval \B \\
       \hline
       \textbf{Meinhof} & \T \I \\
       \rowcolor{gray!25}
-      full\_labels & 0.759\\
-      simple & 0.801\\
+      full\_labels & 0.770\\
+      simple & 0.811\\
       \rowcolor{gray!25}
-      sep\_tok\_full\_labels & 0.838\\
-      \textbf{sep\_tok} & \textbf{0.867}\\
+      sep\_tok\_full\_labels & 0.846\\
+      \textbf{sep\_tok} & \textbf{0.876}\\
       \rowcolor{gray!25}
       \textit{full\_pipe} & \textit{TO-DO}\\
 
