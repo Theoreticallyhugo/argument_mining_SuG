@@ -1,8 +1,8 @@
 **/.pytest_cache/
 **/.idea/
 **/.mypy_cache/
-.DS_Store
-.obsidian*
+**/.DS_Store
+**/.obsidian*
 **/env/
 **/bert*
 **/longformer*
@@ -10,3 +10,4 @@
 **/.ipynb_checkpoints
 **/python*/
 **/.tmp-compiling
+**/essay.json
