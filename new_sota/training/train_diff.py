@@ -90,7 +90,8 @@ def train(
 
     # =========================================
     # get the tokenizer
-    model_checkpoint = "bigscience/bloom-3b"
+    # model_checkpoint = "bigscience/bloom-1b1"
+    model_checkpoint = "bigscience/bloom-560m"
     loud_print(f"using the model: {model_checkpoint}")
     tokenizer = AutoTokenizer.from_pretrained(
         model_checkpoint, add_prefix_space=True
@@ -248,7 +249,9 @@ def train(
         model_checkpoint,
         id2label=id2label,
         label2id=label2id,
-        attention_window=max_text_length,
+        # hidden_size=1024,
+        # ignore_mismatched_sizes=True,
+        # attention_window=max_text_length,
     )
     # _________________________________________
 
