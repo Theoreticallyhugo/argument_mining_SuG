@@ -6,6 +6,8 @@
 **/env/
 **/bert*
 **/longformer*
+**/gpt2*
+**/bloom*
 **/__pycache__/
 **/.ipynb_checkpoints
 **/python*/
