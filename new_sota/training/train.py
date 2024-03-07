@@ -341,6 +341,16 @@ def get_args():
         help="add tag to DISABLE PUSHING. \n"
         + "pushing to hub is true per default",
     )
+    arg_par.add_argument(
+        "--cross_validation",
+        "-cv",
+        default=True,
+        type=bool,
+        nargs="?",
+        const=False,
+        help="add tag to DISABLE CROSS-VALIDATION.\n"
+        + "cross-validation is true per default",
+    )
 
     args = arg_par.parse_args()
     return args
@@ -398,3 +408,5 @@ if __name__ == "__main__":
                 index,
                 args.push,
             )
+            if not args.cross_validation:
+                break
