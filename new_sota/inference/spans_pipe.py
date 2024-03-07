@@ -35,7 +35,7 @@ def inference(texts: List[str] = None):
         ds = datasets.load_dataset(
             "Theoreticallyhugo/essays_SuG", "spans", trust_remote_code=True
         )
-        texts = ds["test"]["text"]
+        texts = ds["train"]["text"]
     # -----------------------------------------
 
     print("running inference")

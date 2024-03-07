@@ -104,8 +104,8 @@ if __name__ == "__main__":
     ds = datasets.load_dataset(
         "Theoreticallyhugo/essays_SuG", "sep_tok", trust_remote_code=True
     )
-    texts = ds["test"]["text"]
-    ids = ds["test"]["id"]
+    texts = ds["train"]["text"]
+    ids = ds["train"]["id"]
 
     spans_results = spans_pipe.inference(texts)
     results = sep_tok_pipe.inference(spans_results)

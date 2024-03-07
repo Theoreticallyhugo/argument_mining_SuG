@@ -38,7 +38,7 @@ results = [
     out
     for out in tqdm(
         pipe(
-            KeyDataset(ds["test"], "text"),
+            KeyDataset(ds["train"], "text"),
             batch_size=8,
         )
     )
