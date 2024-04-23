@@ -267,6 +267,9 @@ def train(
         push_to_hub=push,
         hub_strategy="all_checkpoints",
         seed=seed,
+        metric_for_best_model="loss",
+        load_best_model_at_end=True,
+        greater_is_better=False,
     )
 
     trainer = Trainer(
