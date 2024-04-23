@@ -19,10 +19,10 @@ set_seed(seed)
 
 # =========================================
 # get the pipeline
-# TODO make this more general
+# TODO: make this more general
 model_name = "longformer-full_labels"
 
-pipe = get_pipe(model_name, True)
+pipe = get_pipe(model_name)
 # -----------------------------------------
 
 

@@ -22,7 +22,7 @@ set_seed(seed)
 # TODO make this more general
 model_name = "longformer-simple"
 
-pipe = get_pipe(model_name, True)
+pipe = get_pipe(model_name)
 # -----------------------------------------
 
 

@@ -24,7 +24,7 @@ def inference(texts: List[str] = None):
     # get the pipeline
     model_name = "longformer-sep_tok"
 
-    pipe = get_pipe(model_name, True)
+    pipe = get_pipe(model_name)
     # -----------------------------------------
 
     # =========================================

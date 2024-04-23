@@ -1,30 +1,19 @@
-from huggingface_hub import Repository, get_full_repo_name
 from transformers import pipeline
+import torch
 
 
-def get_pipe(model, pull):
+def get_pipe(model, user="Theoreticallyhugo"):
     """
-    set up or access folder for model. then provide pipe for it.
+    get pipe for huggingface model from huggingface repo
     args:
-        model: model to load to/from folder to cuda pipe
-        pull: pull the model repo if requested
+        model: model to load from huggingface repo
+        user: whose model it is
     """
-
-    # =========================================
-    # set up the folder for the model
-    repo_name = get_full_repo_name(model)
-    print(f"getting model from repo {repo_name}")
-
-    output_dir = model
-    if pull:
-        try:
-            repo = Repository(output_dir, clone_from=repo_name)
-            repo.git_pull()
-        except:
-            print("non-empty repo-folder")
-    # with this set up, anything we save in output_dir can be uploaded by calling
-    # repo.push_to_hub(), which we'll employ later
-    # =========================================
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if torch.backends.mps.is_available() else "cpu"
+    )
 
     print("loading pipeline")
-    return pipeline("token-classification", model=output_dir, device="cuda")
+    return pipeline("token-classification", model=f"{user}/{model}", device=device)
