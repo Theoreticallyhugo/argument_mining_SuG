@@ -24,6 +24,8 @@ For a more in-depth description, refer to the paper in the paper folder.
 
 - dual step pipeline, spans model finds the spans, and is used to inject separator tokens into the text. then the sep_tok model has both the info where spans are, and an easier time labeling because of less labels it has to learn. in the end, the label for each span (determined by the first model) is determined by a majority score, calculated from all labels within one span. this ensures that the span model has an easy task, and the second model is supported, both by being shown where the spans are, and by having the postprocessing of having its labels mapped to the right spans. 
 
-## stats
+## Stats
 all models are evaluated for the epochs 1 through 20 with 5-fold cross-validation
 reference ./new_sota/training/meta_data/
+
+## [License](https://github.com/Theoreticallyhugo/argument_mining_SuG/blob/main/LICENSE.txt)
