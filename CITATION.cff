@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+title: argument_mining_SuG
+message: Please cite this software using these metadata.
+type: software
+authors:
+  - given-names: Hugo Leon Theodor
+    family-names: Meinhof
+    email: me@theoreticallyhugo.com
+    orcid: 'https://orcid.org/0009-0000-5750-6967'
+repository-code: >-
+  https://github.com/Theoreticallyhugo/argument_mining_SuG/tree/main?tab=readme-ov-file
+abstract: >
+  In this project I am presenting new models for classifying
+  and identifying argument components, as defined by Stab
+  and Gurevych in 2017. I propose a new model for running
+  both in one step, as well as models for doing so
+  separately, in a pipeline. I show that my models for the
+  pipeline outperform the baselines, as well as Stab and
+  Gurevychs previous models, on their persuasive essays
+  corpus.
+keywords:
+  - argument mining
+  - machine learning
+license: AGPL-3.0-or-later

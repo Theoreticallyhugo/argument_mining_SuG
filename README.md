@@ -29,3 +29,4 @@ all models are evaluated for the epochs 1 through 20 with 5-fold cross-validatio
 reference ./new_sota/training/meta_data/
 
 ## [License](https://github.com/Theoreticallyhugo/argument_mining_SuG/blob/main/LICENSE.txt)
+## [Citation](https://github.com/Theoreticallyhugo/argument_mining_SuG/blob/main/CITATION.cff)
