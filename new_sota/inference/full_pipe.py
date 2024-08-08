@@ -45,6 +45,14 @@ def to_brat(text, pipe_out, verbose=False):
     # find where each span begins and ends, by looking for sep_toks
     starts = [m.end(0) for m in re.finditer("<s>", text)]
     ends = [m.start(0) for m in re.finditer("</s>", text)]
+    if len(starts) == 0 or len(ends) == 0:
+        raise ValueError(
+            "found no separator tokens in preparation of brat files"
+        )
+    elif len(starts) != len(ends):
+        raise ValueError(
+            "found unequal amount of opening and closing separator tokens"
+        )
 
     # remove sep_toks
     text = text.replace("<s>", "").replace("</s>", "")
@@ -128,7 +136,7 @@ if __name__ == "__main__":
 
     spans_results = spans_pipe.inference(texts)
     results = sep_tok_pipe.inference(spans_results)
-    for text, result, id in zip(texts, results, ids):
+    for text, result, id in zip(spans_results, results, ids):
         txt, ann = to_brat(text, result)
         with open(Path(f"essay_{str(id).rjust(3, '0')}.txt"), "w") as w:
             w.write(txt)
