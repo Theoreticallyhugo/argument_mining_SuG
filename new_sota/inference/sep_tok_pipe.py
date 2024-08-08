@@ -20,14 +20,14 @@
 import torch
 import datasets
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 from tqdm import tqdm
 from transformers import set_seed
 
 from pipe_base import get_pipe
 
 
-def inference(texts: List[str] | None = None):
+def inference(texts: Optional[List[str]] = None):
     # =========================================
     # setting all the seeds for reproducability
     seed = 42
