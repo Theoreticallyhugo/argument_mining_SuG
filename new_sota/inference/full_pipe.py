@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
     argument_mining_SuG is aimed at improving argument component 
     identification and classification based on Stab and Gurevychs prior work.
@@ -17,18 +19,71 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pathlib import Path
+import argparse
+import logging
 import re
-
 from collections import Counter
+from pathlib import Path
+from typing import assert_type
 
 import datasets
-
-from tqdm import tqdm
-from colorama import Fore, Back, Style
-
 import sep_tok_pipe
 import spans_pipe
+from colorama import Back, Fore, Style
+from tqdm import tqdm
+
+
+def get_args():
+    """
+    handles the argument parsing, when full_pipe.py is run from the commandline
+    return:
+        parsed commandline arguments
+    """
+    arg_par = argparse.ArgumentParser()
+    arg_par.add_argument(
+        "--input_path",
+        "-i",
+        # default=Path("./data/genres_original/"),
+        type=Path,
+        help="path to the data directory containing the "
+        + "text files, or singular text file, to process .",
+    )
+    arg_par.add_argument(
+        "--output_dir",
+        "-o",
+        # default=Path("./data/lyrics_original/"),
+        type=Path,
+        help="path to the directory to save the output.",
+    )
+    arg_par.add_argument(
+        "--spans_model",
+        "-s",
+        default="Theoreticallyhugo/longformer-spans",
+        type=str,
+        help="model to use for finding the spans."
+        + "either path to local model or path of huggingface repository"
+        + 'in the format of "user/model"',
+    )
+    arg_par.add_argument(
+        "--labels_model",
+        "-l",
+        default="Theoreticallyhugo/longformer-sep_tok",
+        type=str,
+        help="model to use for labeling the spans. "
+        + "either path to local model or path of huggingface repository "
+        + 'in the format of "user/model"',
+    )
+    arg_par.add_argument(
+        "--verbose",
+        "-v",
+        default=False,
+        const=True,
+        nargs="?",
+        help="set this flag to increase verbosity",
+    )
+
+    args = arg_par.parse_args()
+    return args
 
 
 def to_brat(text, pipe_out, verbose=False):
@@ -127,6 +182,16 @@ def to_brat(text, pipe_out, verbose=False):
 
 
 if __name__ == "__main__":
+    args = get_args()
+    if args.input_path is None:
+        raise ValueError("No input path specified!")
+    if args.output_dir is None:
+        raise ValueError("No output directory specified!")
+    if not args.input_path.exists():
+        raise ValueError("specified input path does not exist!")
+    if not args.output_dir.is_dir():
+        raise ValueError("specified output path is not a directory!")
+
     # doesnt matter which config were loading as we need the untouched texts
     ds = datasets.load_dataset(
         "Theoreticallyhugo/essays_SuG", "sep_tok", trust_remote_code=True
@@ -137,7 +202,7 @@ if __name__ == "__main__":
     spans_results = spans_pipe.inference(texts)
     results = sep_tok_pipe.inference(spans_results)
     for text, result, id in zip(spans_results, results, ids):
-        txt, ann = to_brat(text, result)
+        txt, ann = to_brat(text, result, verbose=args.verbose)
         with open(Path(f"essay_{str(id).rjust(3, '0')}.txt"), "w") as w:
             w.write(txt)
         with open(Path(f"essay_{str(id).rjust(3, '0')}.ann"), "w") as w:
