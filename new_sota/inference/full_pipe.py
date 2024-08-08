@@ -88,7 +88,7 @@ def to_brat(text, pipe_out, verbose=False):
     ):
         line = f"T{id + 1}\t{label} {start} {end}\t{span_text}"
         print(line)
-        output_ann.append(line)
+        output_ann.append(line + "\n")
 
     # if run in verbose mode, print the text with each span, coloured
     # with its labels colour
