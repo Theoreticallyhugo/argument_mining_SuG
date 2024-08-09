@@ -191,6 +191,8 @@ if __name__ == "__main__":
         raise ValueError("specified input path does not exist!")
     if not args.output_dir.is_dir():
         raise ValueError("specified output path is not a directory!")
+    if args.verbose:
+        logging.getLogger().setLevel(logging.INFO)
 
     # doesnt matter which config were loading as we need the untouched texts
     ds = datasets.load_dataset(
@@ -199,8 +201,8 @@ if __name__ == "__main__":
     texts = ds["train"]["text"]
     ids = ds["train"]["id"]
 
-    spans_results = spans_pipe.inference(texts)
-    results = sep_tok_pipe.inference(spans_results)
+    spans_results = spans_pipe.inference(texts, model)
+    results = sep_tok_pipe.inference(spans_results, model)
     for text, result, id in zip(spans_results, results, ids):
         txt, ann = to_brat(text, result, verbose=args.verbose)
         with open(Path(f"essay_{str(id).rjust(3, '0')}.txt"), "w") as w:

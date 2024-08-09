@@ -18,18 +18,28 @@
 """
 
 import argparse
-
-import torch
-import datasets
-
-from tqdm import tqdm
+from pathlib import Path
 from typing import Dict, List, Optional
+
+import datasets
+import torch
+from pipe_base import get_pipe
+from tqdm import tqdm
 from transformers import set_seed
 
-from pipe_base import get_pipe
 
+def inference(
+    texts: Optional[List[str]] = None,
+    model: Optional[str] = "longformer-spans",
+):
+    """
 
-def inference(texts: Optional[List[str]] = None):
+    args:
+        texts List[str]: raw texts to find spans on
+        model str: name or local path of huggingface model.
+    returns:
+        raw output of pipe
+    """
     # =========================================
     # setting all the seeds for reproducability
     seed = 42
@@ -43,9 +53,7 @@ def inference(texts: Optional[List[str]] = None):
 
     # =========================================
     # get the pipeline
-    model_name = "longformer-spans"
-
-    pipe = get_pipe(model_name)
+    pipe = get_pipe(model)
     # -----------------------------------------
 
     # =========================================

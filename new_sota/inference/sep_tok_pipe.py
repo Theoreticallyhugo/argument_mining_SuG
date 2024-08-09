@@ -17,17 +17,28 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import torch
-import datasets
-
+from pathlib import Path
 from typing import Dict, List, Optional
+
+import datasets
+import torch
+from pipe_base import get_pipe
 from tqdm import tqdm
 from transformers import set_seed
 
-from pipe_base import get_pipe
 
+def inference(
+    texts: Optional[List[str]] = None,
+    model: Optional[str] = "longformer-sep_tok",
+):
+    """
 
-def inference(texts: Optional[List[str]] = None):
+    args:
+        texts List[str]: texts with injected separation tokens to label spans on
+        model str: name or local path of huggingface model.
+    returns:
+        raw output of pipe
+    """
     # =========================================
     # setting all the seeds for reproducability
     seed = 42
@@ -41,9 +52,7 @@ def inference(texts: Optional[List[str]] = None):
 
     # =========================================
     # get the pipeline
-    model_name = "longformer-sep_tok"
-
-    pipe = get_pipe(model_name)
+    pipe = get_pipe(model)
     # -----------------------------------------
 
     # =========================================

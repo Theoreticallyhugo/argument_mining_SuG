@@ -17,31 +17,43 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from transformers import pipeline
+import logging
+from pathlib import Path
+
 import torch
-from typing import Optional
+from transformers import pipeline
 
 
-def get_pipe(
-    local_path: Optional[Path] = None,
-    model: Optional[str] = None,
-    user="Theoreticallyhugo",
-):
-    # TODO: local_path
+def get_pipe(model: str):
     """
     get pipe for huggingface model from huggingface repo or local model
+
     args:
-        local_path: path to local model
-        model: model to load from huggingface repo
-        user: whose model it is
+        model str: name or local path of huggingface model.
+    returns:
+        huggingface pipe
     """
+    default_user = "Theoreticallyhugo"
+
+    if Path(model).exists():
+        logging.info(f"trying to load model from local path {model}")
+    elif model.count("/") == 0:
+        logging.info(
+            f"trying to load model {model} from huggingface with default user {default_user}"
+        )
+        model = f"{default_user}/{model}"
+    elif model.count("/") == 1:
+        logging.info(f"trying to load model {model} from huggingface.")
+    else:
+        raise ValueError(
+            "pipe requires either local path or model name. "
+            + "neither was provided."
+        )
+
     device = (
         "cuda"
         if torch.cuda.is_available()
         else "mps" if torch.backends.mps.is_available() else "cpu"
     )
 
-    print("loading pipeline")
-    return pipeline(
-        "token-classification", model=f"{user}/{model}", device=device
-    )
+    return pipeline("token-classification", model=model, device=device)
