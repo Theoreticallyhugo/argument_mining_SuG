@@ -19,12 +19,19 @@
 
 from transformers import pipeline
 import torch
+from typing import Optional
 
 
-def get_pipe(model, user="Theoreticallyhugo"):
+def get_pipe(
+    local_path: Optional[Path] = None,
+    model: Optional[str] = None,
+    user="Theoreticallyhugo",
+):
+    # TODO: local_path
     """
-    get pipe for huggingface model from huggingface repo
+    get pipe for huggingface model from huggingface repo or local model
     args:
+        local_path: path to local model
         model: model to load from huggingface repo
         user: whose model it is
     """
@@ -35,4 +42,6 @@ def get_pipe(model, user="Theoreticallyhugo"):
     )
 
     print("loading pipeline")
-    return pipeline("token-classification", model=f"{user}/{model}", device=device)
+    return pipeline(
+        "token-classification", model=f"{user}/{model}", device=device
+    )
