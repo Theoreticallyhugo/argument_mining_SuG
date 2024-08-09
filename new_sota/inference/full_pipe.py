@@ -180,6 +180,13 @@ def to_brat(text, pipe_out, verbose=False):
 
     return output_txt, output_ann
 
+# TODO: test verbosity
+# TODO: implement logging instead of print
+# TODO: test models
+# TODO: use custom input texts
+# TODO: use custom output location
+# TODO: test whether pipes jumble the order or not
+# TODO: automatically determine encoding?
 
 if __name__ == "__main__":
     args = get_args()
@@ -207,5 +214,3 @@ if __name__ == "__main__":
         txt, ann = to_brat(text, result, verbose=args.verbose)
         with open(Path(f"essay_{str(id).rjust(3, '0')}.txt"), "w") as w:
             w.write(txt)
-        with open(Path(f"essay_{str(id).rjust(3, '0')}.ann"), "w") as w:
-            w.writelines(ann)
