@@ -201,16 +201,22 @@ if __name__ == "__main__":
     if args.verbose:
         logging.getLogger().setLevel(logging.INFO)
 
-    # doesnt matter which config were loading as we need the untouched texts
-    ds = datasets.load_dataset(
-        "Theoreticallyhugo/essays_SuG", "sep_tok", trust_remote_code=True
-    )
-    texts = ds["train"]["text"]
-    ids = ds["train"]["id"]
+    if args.input_path.is_file():
+        # TODO: do fancy path resetting here
+        id = args.input_path
 
-    spans_results = spans_pipe.inference(texts, model)
-    results = sep_tok_pipe.inference(spans_results, model)
-    for text, result, id in zip(spans_results, results, ids):
+        text = args.input_path.read_text()
+        spans_result = spans_pipe.inference(text, args.spans_model)
+        result = sep_tok_pipe.inference(spans_result, args.labels_model)
         txt, ann = to_brat(text, result, verbose=args.verbose)
-        with open(Path(f"essay_{str(id).rjust(3, '0')}.txt"), "w") as w:
+        with open(id) as w:
             w.write(txt)
+        # NOTE: where do we write the ann?
+
+
+    # spans_results = spans_pipe.inference(texts, model)
+    # results = sep_tok_pipe.inference(spans_results, model)
+    # for text, result, id in zip(spans_results, results, ids):
+    #     txt, ann = to_brat(text, result, verbose=args.verbose)
+    #     with open(Path(f"essay_{str(id).rjust(3, '0')}.txt"), "w") as w:
+    #         w.write(txt)
