@@ -24,7 +24,6 @@ import logging
 import re
 from collections import Counter
 from pathlib import Path
-from typing import assert_type
 
 import datasets
 import sep_tok_pipe
@@ -80,6 +79,14 @@ def get_args():
         const=True,
         nargs="?",
         help="set this flag to increase verbosity",
+    )
+    arg_par.add_argument(
+        "--dry",
+        "-d",
+        default=False,
+        const=True,
+        nargs="?",
+        help="set this flag to run without inference",
     )
 
     args = arg_par.parse_args()
@@ -150,35 +157,39 @@ def to_brat(text, pipe_out, verbose=False):
         range(len(labels)), labels, starts, ends, span_texts
     ):
         line = f"T{id + 1}\t{label} {start} {end}\t{span_text}"
-        print(line)
+        # logging.info(line)
         output_ann.append(line + "\n")
+
+    # TODO: test this
 
     # if run in verbose mode, print the text with each span, coloured
     # with its labels colour
-    if verbose:
+    if logging.getLogger().getEffectiveLevel() == logging.INFO:
         indices = starts + ends
         indices.sort()
 
-        print(text[: indices[0]], end="")
+        output = ""
+        output += text[: indices[0]]
         for i in range(1, len(indices)):
             if i % 2 == 1:
                 label = labels[(i - 1) // 2]
                 if label == "MajorClaim":
-                    print(Fore.BLUE, end="")
+                    output += Fore.BLUE
                 elif label == "Claim":
-                    print(Fore.GREEN, end="")
+                    output += Fore.GREEN
                 elif label == "Premise":
-                    print(Fore.YELLOW, end="")
+                    output += Fore.YELLOW
                 else:
-                    print(Fore.RED, end="")
-                    print(label)
+                    output += Fore.RED
+                    output += label
             else:
-                print(Style.RESET_ALL, end="")
-            print(text[indices[i - 1] : indices[i]], end="")
-        print(Style.RESET_ALL + text[indices[-1] :])
-        input()
+                output += Style.RESET_ALL
+            output += text[indices[i - 1] : indices[i]]
+        output += Style.RESET_ALL + text[indices[-1] :]
+        logging.info(output)
 
     return output_txt, output_ann
+
 
 # TODO: test verbosity
 # TODO: implement logging instead of print
@@ -188,35 +199,101 @@ def to_brat(text, pipe_out, verbose=False):
 # TODO: test whether pipes jumble the order or not
 # TODO: automatically determine encoding?
 
+
+def main(input_path, output_dir, spans_model, labels_model, verbose, dry):
+    if input_path is None:
+        raise ValueError("No input path specified!")
+    if output_dir is None:
+        raise ValueError("No output directory specified!")
+    if not input_path.exists():
+        raise ValueError("specified input path does not exist!")
+    if verbose:
+        logging.getLogger().setLevel(logging.INFO)
+    # ========================================
+    # input path is file
+    # ========================================
+    if input_path.is_file():
+        assert input_path.__str__().endswith(
+            ".txt"
+        ), "wrong file format supplied. required format is txt"
+        # make sure output_dir exists
+        if not output_dir.is_dir():
+            output_dir.mkdir()
+            logging.info(f"created {output_dir}")
+
+        # TODO: what about encoding?
+        # read source text
+        text = input_path.read_text()
+        # determine placement of spans
+        spans_result = spans_pipe.inference(text, spans_model)
+        # determine argument type of spans
+        result = sep_tok_pipe.inference(spans_result, labels_model)
+        # convert data to brat standoff format
+        txt, ann = to_brat(text, result, verbose=verbose)
+        # write txt to output dir
+        output_dir.joinpath(input_path.name).write_text(txt)
+        # write ann to output dir
+        output_dir.joinpath(f"{input_path.name[:-3]}ann").write_text(ann)
+    else:
+        # ========================================
+        # input path is directory
+        # ========================================
+
+        # find files that need to be processed
+        # save path of source and output file
+        # create output directory structure in the process
+        source_files = []
+        output_files = []
+        for temp_path in input_path.rglob("*"):
+            # keep the filestructure but replace the root in order to write
+            # to the output dir:
+            # new_path = new_root / old_path.relative_to(old_root)
+            if not (
+                temp_path.is_file() and temp_path.__str__().endswith(".txt")
+            ):
+                continue
+            output_path = output_dir / temp_path.relative_to(input_path)
+
+            # make sure output_path exists
+            if not output_path.parent.is_dir():
+                output_path.parent.mkdir(parents=True)
+                logging.info(f"created {output_path.parent}")
+            source_files.append(temp_path)
+            output_files.append(output_path)
+        # ========================================
+
+        # read source files
+        source_texts = [
+            source_file.read_text() for source_file in source_files
+        ]
+
+        if dry:
+            spans_results = source_files
+            results = source_files
+        else:
+            spans_results = spans_pipe.inference(source_texts, spans_model)
+            results = sep_tok_pipe.inference(spans_results, labels_model)
+        for text, result, output_file in zip(
+            spans_results, results, output_files
+        ):
+            if dry:
+                txt = str(text)
+                ann = str(text)
+            else:
+                txt, ann = to_brat(text, result, verbose=verbose)
+            with open(output_file, "w") as w:
+                w.write(txt)
+            with open(str(output_file)[:-3] + "ann", "w") as w:
+                w.writelines(ann)
+
+
 if __name__ == "__main__":
     args = get_args()
-    if args.input_path is None:
-        raise ValueError("No input path specified!")
-    if args.output_dir is None:
-        raise ValueError("No output directory specified!")
-    if not args.input_path.exists():
-        raise ValueError("specified input path does not exist!")
-    if not args.output_dir.is_dir():
-        raise ValueError("specified output path is not a directory!")
-    if args.verbose:
-        logging.getLogger().setLevel(logging.INFO)
-
-    if args.input_path.is_file():
-        # TODO: do fancy path resetting here
-        id = args.input_path
-
-        text = args.input_path.read_text()
-        spans_result = spans_pipe.inference(text, args.spans_model)
-        result = sep_tok_pipe.inference(spans_result, args.labels_model)
-        txt, ann = to_brat(text, result, verbose=args.verbose)
-        with open(id) as w:
-            w.write(txt)
-        # NOTE: where do we write the ann?
-
-
-    # spans_results = spans_pipe.inference(texts, model)
-    # results = sep_tok_pipe.inference(spans_results, model)
-    # for text, result, id in zip(spans_results, results, ids):
-    #     txt, ann = to_brat(text, result, verbose=args.verbose)
-    #     with open(Path(f"essay_{str(id).rjust(3, '0')}.txt"), "w") as w:
-    #         w.write(txt)
+    main(
+        args.input_path,
+        args.output_dir,
+        args.spans_model,
+        args.labels_model,
+        args.verbose,
+        args.dry,
+    )
