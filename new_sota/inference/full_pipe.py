@@ -192,7 +192,6 @@ def to_brat(text, pipe_out, verbose=False):
 
 
 # TODO: test verbosity
-# TODO: implement logging instead of print
 # TODO: test models
 # TODO: use custom input texts
 # TODO: use custom output location

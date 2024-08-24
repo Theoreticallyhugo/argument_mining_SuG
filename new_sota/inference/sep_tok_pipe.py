@@ -25,6 +25,7 @@ import torch
 from pipe_base import get_pipe
 from tqdm import tqdm
 from transformers import set_seed
+import logging
 
 
 def inference(
@@ -64,7 +65,7 @@ def inference(
         texts = ds["train"]["text"]
     # -----------------------------------------
 
-    print("running inference")
+    logging.info("running inference")
     results = [
         out
         for out in tqdm(

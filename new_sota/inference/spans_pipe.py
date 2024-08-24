@@ -26,6 +26,7 @@ import torch
 from pipe_base import get_pipe
 from tqdm import tqdm
 from transformers import set_seed
+import logging
 
 
 def inference(
@@ -65,7 +66,7 @@ def inference(
         texts = ds["train"]["text"]
     # -----------------------------------------
 
-    print("running inference")
+    logging.info("running inference")
     results = [
         out
         for out in tqdm(
@@ -79,7 +80,7 @@ def inference(
     # freeing up vram
     del pipe
 
-    print("weeding spans that are too short")
+    logging.info("weeding spans that are too short")
     # remove spans that are considered too short
     clean_results: List[List[Dict]] = []
 
@@ -133,7 +134,7 @@ def inference(
             current_end = token["end"]
         sep_tok[-1].append(current_end)
 
-    print("inserting sep toks")
+    logging.info("inserting sep toks")
     # inserting cls and sep tok into the texts for the next pipe
     # these loops destroy the variables: texts, cls_tok, and sep_tok
     for i in tqdm(range(len(texts))):
