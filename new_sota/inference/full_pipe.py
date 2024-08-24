@@ -208,27 +208,32 @@ def main(input_path, output_dir, spans_model, labels_model, verbose, dry):
         raise ValueError("specified input path does not exist!")
     if verbose:
         logging.getLogger().setLevel(logging.INFO)
-    # ========================================
-    # input path is file
-    # ========================================
+
     if input_path.is_file():
+        # ========================================
+        # input path is file
+        # ========================================
         assert input_path.__str__().endswith(
             ".txt"
         ), "wrong file format supplied. required format is txt"
         # make sure output_dir exists
         if not output_dir.is_dir():
-            output_dir.mkdir()
+            output_dir.mkdir(parents=True)
             logging.info(f"created {output_dir}")
 
         # TODO: what about encoding?
         # read source text
         text = input_path.read_text()
-        # determine placement of spans
-        spans_result = spans_pipe.inference(text, spans_model)
-        # determine argument type of spans
-        result = sep_tok_pipe.inference(spans_result, labels_model)
-        # convert data to brat standoff format
-        txt, ann = to_brat(text, result, verbose=verbose)
+        if dry:
+            txt = "this is the original text"
+            ann = "this should be in brat standoff format"
+        else:
+            # determine placement of spans
+            spans_result = spans_pipe.inference(text, spans_model)
+            # determine argument type of spans
+            result = sep_tok_pipe.inference(spans_result, labels_model)
+            # convert data to brat standoff format
+            txt, ann = to_brat(text, result, verbose=verbose)
         # write txt to output dir
         output_dir.joinpath(input_path.name).write_text(txt)
         # write ann to output dir
